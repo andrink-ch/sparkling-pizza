@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 const STEPS = [
-  { n: '01', title: 'Paste a link', desc: 'Copy any TikTok or Instagram recipe video URL and paste it into sparkling.pizza.' },
+  { n: '01', title: 'Paste a link', desc: 'Copy any TikTok or Instagram recipe video URL and paste it into 2dish.' },
   { n: '02', title: 'AI does the work', desc: 'We extract the full recipe — title, ingredients with quantities, steps, and nutrition facts.' },
   { n: '03', title: 'Cook smarter', desc: 'Scale to your portions, add everything to your shopping list, and follow along as you cook.' },
 ];
@@ -117,7 +117,7 @@ export default function LandingPage() {
         {/* Nav */}
         <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px', position: 'relative', zIndex: 10 }}>
           <span style={{ fontFamily: 'Syne, system-ui, sans-serif', fontSize: '20px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-            sparkling<span style={{ color: '#FF5500' }}>.</span>pizza
+            2<span style={{ color: '#FF5500' }}>d</span>ish
           </span>
           <Link to="/app" className="lp-btn-outline">Open app</Link>
         </nav>
@@ -262,7 +262,7 @@ export default function LandingPage() {
             No subscriptions. No account. Paste a link and start building your cookbook right now.
           </p>
           <Link to="/app" className="lp-btn-dark">
-            Open sparkling.pizza
+            Open 2dish
             <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ width: 16, height: 16 }}>
               <path d="M4 9h10M9 4l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -273,7 +273,7 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer style={{ background: '#09090B', padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <span style={{ fontFamily: 'Syne, system-ui, sans-serif', fontSize: '18px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-          sparkling<span style={{ color: '#FF5500' }}>.</span>pizza
+          2<span style={{ color: '#FF5500' }}>d</span>ish
         </span>
         <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.2)', fontFamily: 'Outfit, system-ui, sans-serif' }}>
           Save recipes. Cook smarter.

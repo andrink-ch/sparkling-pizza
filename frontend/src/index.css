@@ -4,15 +4,15 @@
 
 @layer base {
   body {
-    background-color: #F3F4F6;
-    color: #09090B;
+    background-color: #09090B;
+    color: #F0F4F8;
     font-family: 'Outfit', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   ::selection {
-    background-color: rgba(255, 85, 0, 0.15);
-    color: #09090B;
+    background-color: rgba(255, 85, 0, 0.25);
+    color: #F0F4F8;
   }
 }
 
@@ -30,22 +30,23 @@
   to   { transform: translateX(0); }
 }
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in     { animation: fadeIn       0.2s ease-out both; }
 .animate-slide-right { animation: slideInRight 0.3s cubic-bezier(0.22,1,0.36,1) both; }
 .animate-slide-up    { animation: slideInUp    0.28s cubic-bezier(0.22,1,0.36,1) both; }
-.card-enter          { animation: fadeSlideUp  0.42s cubic-bezier(0.22,1,0.36,1) both; }
+.card-enter          { animation: fadeSlideUp  0.4s cubic-bezier(0.22,1,0.36,1) both; }
 
 /* ── Scrollbar ──────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D1D1D6; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: #2C2E3A; border-radius: 99px; }
 
-/* ── Misc ───────────────────────────────────────────── */
+/* ── Input tweaks ───────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type="number"] { -moz-appearance: textfield; }
 input[type="checkbox"] { accent-color: #FF5500; }
+select option { background: #18191F; color: #F0F4F8; }
