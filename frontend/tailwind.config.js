@@ -3,40 +3,41 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Cormorant', 'Georgia', 'serif'],
-        sans: ['Outfit', 'system-ui', 'sans-serif'],
+        display: ['Syne', 'system-ui', 'sans-serif'],
+        sans:    ['Outfit', 'system-ui', 'sans-serif'],
       },
       colors: {
-        parchment: '#F5EED8',
-        surface: '#FAF6EC',
-        forest: {
-          DEFAULT: '#1C2B1A',
-          light: '#243621',
-          muted: '#3D5A3A',
+        bg:      '#F3F4F6',
+        surface: '#FFFFFF',
+        border: {
+          DEFAULT: '#E4E4E7',
+          strong:  '#D1D1D6',
         },
-        terra: {
-          DEFAULT: '#C4592A',
-          50: '#FDF0E8',
-          100: '#F5D9C8',
-          200: '#EBB898',
-          dark: '#A84420',
+        ink: {
+          DEFAULT: '#09090B',
+          2: '#3F3F46',
+          3: '#71717A',
+          4: '#A1A1AA',
         },
-        sage: {
-          DEFAULT: '#4A7A5C',
-          50: '#EEF4F1',
-          100: '#D4E7DB',
-          dark: '#3D6449',
+        accent: {
+          DEFAULT: '#FF5500',
+          dark:    '#E04800',
+          bg:      '#FFF3EE',
+          border:  '#FFD0B8',
         },
-        ink: '#1A1208',
-        muted: '#8B7D6B',
-        'ink-light': '#B5A898',
-        'warm-border': '#E2D5BE',
-        'warm-border-dark': '#CFC0A8',
+        ok: {
+          DEFAULT: '#16A34A',
+          bg:      '#F0FDF4',
+          border:  '#BBF7D0',
+        },
       },
       boxShadow: {
-        'warm-sm': '0 1px 4px rgba(26,18,8,0.07), 0 0 0 1px rgba(226,213,190,0.6)',
-        'warm-md': '0 4px 20px rgba(26,18,8,0.10), 0 0 0 1px rgba(226,213,190,0.4)',
-        'warm-lg': '0 12px 40px rgba(26,18,8,0.14)',
+        card:       '0 1px 3px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.04)',
+        'card-md':  '0 4px 16px rgba(0,0,0,0.09), 0 0 0 1px rgba(0,0,0,0.04)',
+        modal:      '0 24px 64px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)',
+      },
+      borderRadius: {
+        DEFAULT: '10px',
       },
     },
   },

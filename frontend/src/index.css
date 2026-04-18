@@ -4,73 +4,48 @@
 
 @layer base {
   body {
-    background-color: #F5EED8;
-    color: #1A1208;
+    background-color: #F3F4F6;
+    color: #09090B;
     font-family: 'Outfit', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
   ::selection {
-    background-color: #EBB898;
-    color: #1A1208;
+    background-color: rgba(255, 85, 0, 0.15);
+    color: #09090B;
   }
 }
 
-@layer utilities {
-  .font-display {
-    font-family: 'Cormorant', Georgia, serif;
-  }
-}
-
+/* ── Animations ─────────────────────────────────────── */
 @keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 @keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
-
 @keyframes slideInUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in      { animation: fadeIn 0.25s ease-out both; }
-.animate-slide-right  { animation: slideInRight 0.32s cubic-bezier(0.22,1,0.36,1) both; }
-.animate-slide-up     { animation: slideInUp 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+.animate-fade-in     { animation: fadeIn       0.2s ease-out both; }
+.animate-slide-right { animation: slideInRight 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+.animate-slide-up    { animation: slideInUp    0.28s cubic-bezier(0.22,1,0.36,1) both; }
+.card-enter          { animation: fadeSlideUp  0.42s cubic-bezier(0.22,1,0.36,1) both; }
 
-.card-enter {
-  animation: fadeSlideUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
+/* ── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CFC0A8; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #B5A898; }
+::-webkit-scrollbar-thumb { background: #D1D1D6; border-radius: 99px; }
 
-/* Custom checkbox */
-input[type="checkbox"] {
-  accent-color: #C4592A;
-}
-
-/* Remove number input arrows */
+/* ── Misc ───────────────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-}
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type="number"] { -moz-appearance: textfield; }
+input[type="checkbox"] { accent-color: #FF5500; }

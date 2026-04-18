@@ -1,24 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getShoppingList, updateShoppingItem, deleteShoppingItem, clearShoppingList } from '../api';
 
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
-      <path d="M3 3l10 10M13 3L3 13" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-      <path d="M2 4h12M5 4V3h6v1M6 7v5M10 7v5M3 4l1 9h8l1-9" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export default function ShoppingList({ onClose }) {
-  const [items, setItems] = useState([]);
+  const [items,   setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -48,103 +32,71 @@ export default function ShoppingList({ onClose }) {
   function formatItem(item) {
     const parts = [];
     if (item.quantity) parts.push(item.quantity);
-    if (item.unit) parts.push(item.unit);
+    if (item.unit)     parts.push(item.unit);
     return parts.length > 0 ? `${parts.join(' ')} ${item.ingredient_name}` : item.ingredient_name;
   }
 
   const unchecked = items.filter(i => !i.checked);
-  const checked = items.filter(i => i.checked);
+  const checked   = items.filter(i => i.checked);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end animate-fade-in">
       <div
         className="absolute inset-0"
-        style={{ backgroundColor: 'rgba(26,18,8,0.35)', backdropFilter: 'blur(2px)' }}
+        style={{ backgroundColor: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
         onClick={onClose}
       />
 
-      <div
-        className="relative flex flex-col w-full max-w-[320px] h-full animate-slide-right"
-        style={{ backgroundColor: '#1C2B1A' }}
-      >
+      <div className="relative flex flex-col w-full max-w-[310px] h-full bg-surface border-l border-border animate-slide-right shadow-modal">
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4 shrink-0"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div>
-            <h2
-              className="font-display text-xl font-semibold"
-              style={{ color: '#F5EED8' }}
-            >
-              Shopping List
-            </h2>
+            <h2 className="font-display font-bold text-ink text-lg">Shopping list</h2>
             {!loading && items.length > 0 && (
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(245,238,216,0.4)' }}>
-                {unchecked.length} remaining
-              </p>
+              <p className="text-xs text-ink-4 mt-0.5">{unchecked.length} remaining</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-            style={{ color: 'rgba(245,238,216,0.5)' }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
-              e.currentTarget.style.color = '#F5EED8';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = 'rgba(245,238,216,0.5)';
-            }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-4 hover:text-ink hover:bg-border transition-colors text-xl"
           >
-            <CloseIcon />
+            ×
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-5 py-4">
           {loading ? (
-            <div className="flex items-center justify-center py-16 gap-2 text-sm" style={{ color: 'rgba(245,238,216,0.35)' }}>
-              <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            <div className="flex items-center justify-center py-16 gap-2 text-ink-4 text-sm">
+              <svg className="animate-spin w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
               </svg>
               Loading…
             </div>
           ) : items.length === 0 ? (
             <div className="text-center py-16">
-              <p className="font-display text-2xl italic mb-1" style={{ color: 'rgba(245,238,216,0.25)' }}>
-                Empty
-              </p>
-              <p className="text-xs" style={{ color: 'rgba(245,238,216,0.25)' }}>
-                Add recipes from the main list
-              </p>
+              <p className="font-display font-semibold text-xl text-ink-4 mb-1">Empty</p>
+              <p className="text-xs text-ink-4">Add recipes from the main list</p>
             </div>
           ) : (
             <div className="flex flex-col gap-5">
               {unchecked.length > 0 && (
-                <ul className="flex flex-col gap-0.5">
+                <ul className="flex flex-col">
                   {unchecked.map(item => (
-                    <li key={item.id} className="flex items-center gap-3 py-2 group rounded-lg px-1 -mx-1 transition-colors">
+                    <li key={item.id} className="flex items-center gap-3 py-2.5 group border-b border-border last:border-0">
                       <input
                         type="checkbox"
                         checked={false}
                         onChange={() => toggleChecked(item)}
-                        className="w-4 h-4 shrink-0 cursor-pointer rounded"
-                        style={{ accentColor: '#C4592A' }}
+                        className="w-4 h-4 rounded shrink-0 cursor-pointer"
                       />
-                      <span className="flex-1 text-sm" style={{ color: '#F5EED8' }}>
-                        {formatItem(item)}
-                      </span>
+                      <span className="flex-1 text-sm text-ink-2">{formatItem(item)}</span>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ color: 'rgba(245,238,216,0.3)' }}
-                        onMouseEnter={e => { e.currentTarget.style.color = '#C4592A'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(245,238,216,0.3)'; }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-4 hover:text-red-500 text-base leading-none"
                       >
-                        <TrashIcon />
+                        ×
                       </button>
                     </li>
                   ))}
@@ -153,34 +105,22 @@ export default function ShoppingList({ onClose }) {
 
               {checked.length > 0 && (
                 <div>
-                  <p
-                    className="text-[10px] uppercase tracking-[0.12em] font-medium mb-2"
-                    style={{ color: 'rgba(245,238,216,0.3)' }}
-                  >
-                    Done
-                  </p>
-                  <ul className="flex flex-col gap-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-ink-4 mb-2">Done</p>
+                  <ul className="flex flex-col">
                     {checked.map(item => (
-                      <li key={item.id} className="flex items-center gap-3 py-2 group rounded-lg px-1 -mx-1 opacity-40">
+                      <li key={item.id} className="flex items-center gap-3 py-2.5 group border-b border-border last:border-0 opacity-40">
                         <input
                           type="checkbox"
                           checked={true}
                           onChange={() => toggleChecked(item)}
-                          className="w-4 h-4 shrink-0 cursor-pointer"
-                          style={{ accentColor: '#C4592A' }}
+                          className="w-4 h-4 rounded shrink-0 cursor-pointer"
                         />
-                        <span
-                          className="flex-1 text-sm line-through"
-                          style={{ color: 'rgba(245,238,216,0.6)' }}
-                        >
-                          {formatItem(item)}
-                        </span>
+                        <span className="flex-1 text-sm text-ink-4 line-through">{formatItem(item)}</span>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ color: 'rgba(245,238,216,0.3)' }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-4 hover:text-red-500 text-base leading-none"
                         >
-                          <TrashIcon />
+                          ×
                         </button>
                       </li>
                     ))}
@@ -193,22 +133,10 @@ export default function ShoppingList({ onClose }) {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div
-            className="px-6 py-4 shrink-0"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
-          >
+          <div className="px-5 py-4 border-t border-border shrink-0">
             <button
               onClick={handleClear}
-              className="w-full text-xs py-2 rounded-lg transition-colors font-medium"
-              style={{ color: 'rgba(245,238,216,0.35)' }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(196,89,42,0.15)';
-                e.currentTarget.style.color = '#EBB898';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = 'rgba(245,238,216,0.35)';
-              }}
+              className="w-full text-xs py-2 rounded-lg text-ink-4 hover:text-red-500 hover:bg-red-50 transition-colors font-medium"
             >
               Clear all
             </button>

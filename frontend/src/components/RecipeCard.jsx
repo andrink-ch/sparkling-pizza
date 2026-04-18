@@ -3,12 +3,12 @@ import { addRecipeToShopping } from '../api';
 import { useState } from 'react';
 import { getSmartTags } from '../utils/smartTags';
 
-const TAG_STYLES = {
-  green:   { backgroundColor: '#D4E7DB', color: '#2A5439' },
-  blue:    { backgroundColor: '#D4E0EE', color: '#2A3F6B' },
-  purple:  { backgroundColor: '#E4D8F0', color: '#4A2A6B' },
-  emerald: { backgroundColor: '#D2EADE', color: '#1E5438' },
-  amber:   { backgroundColor: '#EEE0C2', color: '#6B4A10' },
+const TAG_PILL = {
+  green:   'bg-emerald-50 text-emerald-700',
+  blue:    'bg-blue-50 text-blue-700',
+  purple:  'bg-violet-50 text-violet-700',
+  emerald: 'bg-teal-50 text-teal-700',
+  amber:   'bg-amber-50 text-amber-700',
 };
 
 function ClockIcon() {
@@ -21,11 +21,11 @@ function ClockIcon() {
 }
 
 export default function RecipeCard({ recipe, index = 0 }) {
-  const navigate = useNavigate();
-  const [added, setAdded] = useState(false);
-  const [hovering, setHovering] = useState(false);
-  const totalTime = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
-  const smartTags = getSmartTags(recipe).slice(0, 2);
+  const navigate  = useNavigate();
+  const [added,   setAdded]   = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const totalTime  = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
+  const smartTags  = getSmartTags(recipe).slice(0, 2);
 
   async function handleAddToShopping(e) {
     e.stopPropagation();
@@ -39,34 +39,21 @@ export default function RecipeCard({ recipe, index = 0 }) {
   return (
     <article
       onClick={() => navigate(`/recipes/${recipe.id}`)}
-      className="card-enter group cursor-pointer rounded-xl overflow-hidden flex flex-col transition-all duration-300"
+      className="card-enter bg-surface rounded-xl cursor-pointer overflow-hidden flex flex-col transition-all duration-200"
       style={{
-        animationDelay: `${index * 55}ms`,
-        backgroundColor: '#FAF6EC',
-        boxShadow: hovering
-          ? '0 6px 24px rgba(26,18,8,0.13), 0 0 0 1px rgba(196,89,42,0.18)'
-          : '0 1px 4px rgba(26,18,8,0.06), 0 0 0 1px rgba(226,213,190,0.8)',
-        transform: hovering ? 'translateY(-2px)' : 'translateY(0)',
+        animationDelay: `${index * 50}ms`,
+        boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.09), 0 0 0 1px rgba(0,0,0,0.05)' : '0 1px 3px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.04)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {/* Terracotta accent strip */}
-      <div
-        className="h-[3px] w-full transition-all duration-300"
-        style={{
-          background: hovering
-            ? 'linear-gradient(90deg, #C4592A, #D97A50)'
-            : '#C4592A',
-        }}
-      />
+      {/* Accent top bar */}
+      <div className="h-[2px] bg-accent" />
 
-      <div className="p-5 flex flex-col gap-3 flex-1">
+      <div className="p-4 flex flex-col gap-3 flex-1">
         {/* Title */}
-        <h3
-          className="font-display leading-snug text-ink line-clamp-2"
-          style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.01em' }}
-        >
+        <h3 className="font-display font-semibold text-ink leading-snug line-clamp-2" style={{ fontSize: '15px' }}>
           {recipe.title}
         </h3>
 
@@ -74,11 +61,7 @@ export default function RecipeCard({ recipe, index = 0 }) {
         {smartTags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {smartTags.map(t => (
-              <span
-                key={t.key}
-                className="text-[11px] px-2.5 py-0.5 rounded-full font-medium"
-                style={TAG_STYLES[t.color] || TAG_STYLES.amber}
-              >
+              <span key={t.key} className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${TAG_PILL[t.color] || TAG_PILL.amber}`}>
                 {t.label}
               </span>
             ))}
@@ -86,23 +69,22 @@ export default function RecipeCard({ recipe, index = 0 }) {
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-1">
-          <div className="flex items-center gap-2.5 text-[12px] text-muted">
+        <div className="flex items-center justify-between mt-auto">
+          <div className="flex items-center gap-2 text-[12px] text-ink-4">
             {totalTime > 0 && (
               <span className="flex items-center gap-1">
-                <ClockIcon />
-                {totalTime}m
+                <ClockIcon />{totalTime}m
               </span>
             )}
             {recipe.calories && (
               <>
-                {totalTime > 0 && <span className="opacity-30">·</span>}
+                {totalTime > 0 && <span>·</span>}
                 <span>{recipe.calories} kcal</span>
               </>
             )}
             {recipe.protein_g && (
               <>
-                <span className="opacity-30">·</span>
+                <span>·</span>
                 <span>{recipe.protein_g}g</span>
               </>
             )}
@@ -111,24 +93,24 @@ export default function RecipeCard({ recipe, index = 0 }) {
           <button
             onClick={handleAddToShopping}
             title={added ? 'Added!' : 'Add to shopping list'}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 shrink-0"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 shrink-0 border"
             style={{
-              backgroundColor: added ? '#D4E7DB' : 'transparent',
-              color: added ? '#2A5439' : '#B5A898',
-              border: `1.5px solid ${added ? '#4A7A5C' : '#E2D5BE'}`,
+              backgroundColor: added ? '#F0FDF4' : 'transparent',
+              color:            added ? '#16A34A'  : '#A1A1AA',
+              borderColor:      added ? '#BBF7D0'  : '#E4E4E7',
             }}
             onMouseEnter={e => {
               if (!added) {
-                e.currentTarget.style.backgroundColor = '#F5D9C8';
-                e.currentTarget.style.color = '#C4592A';
-                e.currentTarget.style.borderColor = '#C4592A';
+                e.currentTarget.style.backgroundColor = '#FFF3EE';
+                e.currentTarget.style.color = '#FF5500';
+                e.currentTarget.style.borderColor = '#FFD0B8';
               }
             }}
             onMouseLeave={e => {
               if (!added) {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#B5A898';
-                e.currentTarget.style.borderColor = '#E2D5BE';
+                e.currentTarget.style.color = '#A1A1AA';
+                e.currentTarget.style.borderColor = '#E4E4E7';
               }
             }}
           >

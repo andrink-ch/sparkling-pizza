@@ -5,43 +5,39 @@ import RecipeEditModal from './RecipeEditModal';
 import { calcTDEE, recommendedPortions, formatQty } from '../utils/nutrition';
 import { getSmartTags } from '../utils/smartTags';
 
-const TAG_STYLES = {
-  green:   { backgroundColor: '#D4E7DB', color: '#2A5439' },
-  blue:    { backgroundColor: '#D4E0EE', color: '#2A3F6B' },
-  purple:  { backgroundColor: '#E4D8F0', color: '#4A2A6B' },
-  emerald: { backgroundColor: '#D2EADE', color: '#1E5438' },
-  amber:   { backgroundColor: '#EEE0C2', color: '#6B4A10' },
+const TAG_PILL = {
+  green:   'bg-emerald-50 text-emerald-700',
+  blue:    'bg-blue-50 text-blue-700',
+  purple:  'bg-violet-50 text-violet-700',
+  emerald: 'bg-teal-50 text-teal-700',
+  amber:   'bg-amber-50 text-amber-700',
 };
 
-function BackIcon() {
+function Spinner() {
   return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-      <path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ExternalIcon() {
-  return (
-    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3 h-3">
-      <path d="M6 2H2v10h10V8M8 2h4v4M6 8l5.5-5.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div className="flex items-center justify-center py-32 gap-2 text-ink-4 text-sm">
+      <svg className="animate-spin w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+      </svg>
+      Loading…
+    </div>
   );
 }
 
 export default function RecipeDetail({ userProfile }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [recipe, setRecipe] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const [recipe,        setRecipe]        = useState(null);
+  const [loading,       setLoading]       = useState(true);
+  const [editing,       setEditing]       = useState(false);
   const [shoppingAdded, setShoppingAdded] = useState(false);
-  const [portions, setPortions] = useState(1);
-  const [checkedSteps, setCheckedSteps] = useState(new Set());
+  const [portions,      setPortions]      = useState(1);
+  const [checkedSteps,  setCheckedSteps]  = useState(new Set());
 
   async function load() {
     setLoading(true);
-    try { setRecipe(await getRecipe(id)); }
+    try   { setRecipe(await getRecipe(id)); }
     catch { setRecipe(null); }
     finally { setLoading(false); }
   }
@@ -57,7 +53,7 @@ export default function RecipeDetail({ userProfile }) {
   async function handleDelete() {
     if (!window.confirm(`Delete "${recipe.title}"?`)) return;
     await deleteRecipe(id);
-    navigate('/');
+    navigate('/app');
   }
 
   async function handleAddToShopping() {
@@ -76,185 +72,140 @@ export default function RecipeDetail({ userProfile }) {
     });
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32 gap-2 text-ink-light text-sm">
-        <svg className="animate-spin w-4 h-4 text-terra" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-          <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-        </svg>
-        Loading…
-      </div>
-    );
-  }
+  if (loading) return <Spinner />;
+  if (!recipe) return (
+    <div className="text-center py-32">
+      <p className="font-display text-2xl font-semibold text-ink-4 mb-3">Recipe not found</p>
+      <Link to="/app" className="text-sm text-accent hover:text-accent-dark transition-colors">← All recipes</Link>
+    </div>
+  );
 
-  if (!recipe) {
-    return (
-      <div className="text-center py-32">
-        <p className="font-display text-3xl italic text-ink-light mb-3">Recipe not found</p>
-        <Link to="/" className="text-sm text-terra hover:text-terra-dark transition-colors flex items-center gap-1 justify-center">
-          <BackIcon /> All recipes
-        </Link>
-      </div>
-    );
-  }
-
-  const totalTime = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
+  const totalTime   = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
   const baseServings = recipe.servings || 1;
-  const scale = portions / baseServings;
+  const scale        = portions / baseServings;
 
   const scaled = {
-    calories: recipe.calories ? Math.round(recipe.calories * portions) : null,
+    calories:  recipe.calories  ? Math.round(recipe.calories  * portions) : null,
     protein_g: recipe.protein_g ? Math.round(recipe.protein_g * portions * 10) / 10 : null,
-    carbs_g: recipe.carbs_g ? Math.round(recipe.carbs_g * portions * 10) / 10 : null,
-    fat_g: recipe.fat_g ? Math.round(recipe.fat_g * portions * 10) / 10 : null,
-    fiber_g: recipe.fiber_g ? Math.round(recipe.fiber_g * portions * 10) / 10 : null,
-    sugar_g: recipe.sugar_g ? Math.round(recipe.sugar_g * portions * 10) / 10 : null,
+    carbs_g:   recipe.carbs_g   ? Math.round(recipe.carbs_g   * portions * 10) / 10 : null,
+    fat_g:     recipe.fat_g     ? Math.round(recipe.fat_g     * portions * 10) / 10 : null,
+    fiber_g:   recipe.fiber_g   ? Math.round(recipe.fiber_g   * portions * 10) / 10 : null,
+    sugar_g:   recipe.sugar_g   ? Math.round(recipe.sugar_g   * portions * 10) / 10 : null,
   };
 
-  const tdee = userProfile ? calcTDEE(userProfile) : null;
+  const tdee        = userProfile ? calcTDEE(userProfile) : null;
   const recommended = recipe.calories ? recommendedPortions(tdee, recipe.calories) : null;
-  const smartTags = getSmartTags(recipe);
+  const smartTags   = getSmartTags(recipe);
 
   const nutrientRows = [
-    ['Cal', scaled.calories, 'kcal'],
-    ['Protein', scaled.protein_g, 'g'],
-    ['Carbs', scaled.carbs_g, 'g'],
-    ['Fat', scaled.fat_g, 'g'],
-    ['Fiber', scaled.fiber_g, 'g'],
-    ['Sugar', scaled.sugar_g, 'g'],
+    ['Cal',     scaled.calories,   'kcal'],
+    ['Protein', scaled.protein_g,  'g'],
+    ['Carbs',   scaled.carbs_g,    'g'],
+    ['Fat',     scaled.fat_g,      'g'],
+    ['Fiber',   scaled.fiber_g,    'g'],
+    ['Sugar',   scaled.sugar_g,    'g'],
   ].filter(([, v]) => v != null);
 
   return (
     <div className="max-w-2xl mx-auto animate-slide-up">
-      {/* Back nav */}
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-terra transition-colors mb-8 group"
-      >
-        <span className="transition-transform duration-150 group-hover:-translate-x-0.5">
-          <BackIcon />
-        </span>
+      {/* Back */}
+      <Link to="/app" className="inline-flex items-center gap-1.5 text-xs text-ink-4 hover:text-accent transition-colors mb-6 group">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5">
+          <path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
         All recipes
       </Link>
 
       {/* Title block */}
       <div className="mb-8">
-        <h1
-          className="font-display text-ink leading-tight mb-4"
-          style={{ fontSize: 'clamp(28px, 5vw, 40px)', fontWeight: 600, letterSpacing: '-0.01em' }}
-        >
+        <h1 className="font-display font-bold text-ink leading-tight mb-3" style={{ fontSize: 'clamp(26px, 5vw, 38px)' }}>
           {recipe.title}
         </h1>
 
-        {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted mb-4">
+        {/* Meta */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-4 mb-3">
           {totalTime > 0 && (
             <span className="flex items-center gap-1.5">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-                <circle cx="8" cy="8" r="6.5" />
-                <path d="M8 5v3l1.8 1.8" strokeLinecap="round" />
+                <circle cx="8" cy="8" r="6.5" /><path d="M8 5v3l1.8 1.8" strokeLinecap="round" />
               </svg>
               {totalTime} min
             </span>
           )}
-          {recipe.servings && (
-            <span className="flex items-center gap-1.5">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-                <path d="M8 2v6M5 5H2a6 6 0 0012 0h-3" strokeLinecap="round" />
-                <path d="M8 14v-2" strokeLinecap="round" />
-              </svg>
-              {recipe.servings} servings
-            </span>
-          )}
+          {recipe.servings && <span>{recipe.servings} servings</span>}
           {recipe.source_url && (
-            <a
-              href={recipe.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-terra transition-colors"
-            >
-              <ExternalIcon />
-              Original source
+            <a href={recipe.source_url} target="_blank" rel="noopener noreferrer"
+               className="hover:text-accent transition-colors flex items-center gap-1">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3 h-3">
+                <path d="M6 2H2v10h10V8M8 2h4v4M6 8l5.5-5.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Source
             </a>
           )}
         </div>
 
-        {/* Smart tags */}
+        {/* Tags */}
         {smartTags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-5">
             {smartTags.map(t => (
-              <span
-                key={t.key}
-                className="text-[11px] px-2.5 py-0.5 rounded-full font-medium"
-                style={TAG_STYLES[t.color] || TAG_STYLES.amber}
-              >
+              <span key={t.key} className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold ${TAG_PILL[t.color] || TAG_PILL.amber}`}>
                 {t.label}
               </span>
             ))}
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleAddToShopping}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
             style={{
-              backgroundColor: shoppingAdded ? '#D4E7DB' : '#C4592A',
-              color: shoppingAdded ? '#2A5439' : '#fff',
-              boxShadow: shoppingAdded ? 'none' : '0 2px 8px rgba(196,89,42,0.3)',
+              backgroundColor: shoppingAdded ? '#F0FDF4' : '#FF5500',
+              color:           shoppingAdded ? '#16A34A' : '#fff',
+              border:          `1.5px solid ${shoppingAdded ? '#BBF7D0' : '#FF5500'}`,
             }}
           >
             {shoppingAdded ? '✓ Added' : '+ Shopping list'}
           </button>
           <button
             onClick={() => setEditing(true)}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-muted transition-colors duration-200 hover:bg-warm-border hover:text-ink"
-            style={{ backgroundColor: '#EDE4D0' }}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-ink-3 bg-border hover:bg-border-strong transition-colors"
           >
             Edit
           </button>
           <button
             onClick={handleDelete}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            style={{ color: '#B83A1A' }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#FDF0E8'; }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
           >
             Delete
           </button>
         </div>
       </div>
 
-      <div
-        className="h-px w-full mb-8"
-        style={{ background: 'linear-gradient(90deg, #E2D5BE, transparent)' }}
-      />
+      <hr className="border-border mb-8" />
 
-      {/* Portion picker */}
+      {/* Portions */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">Portions</h2>
-          {tdee && (
-            <span className="text-xs text-muted">TDEE {tdee} kcal/day</span>
-          )}
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-4">Portions</p>
+          {tdee && <span className="text-xs text-ink-4">TDEE {tdee} kcal</span>}
         </div>
 
         <div className="flex gap-2">
           {[1, 2, 3].map(n => {
-            const isActive = portions === n;
-            const isRec = recommended === n;
+            const active = portions === n;
+            const isRec  = recommended === n;
             return (
               <button
                 key={n}
                 onClick={() => setPortions(n)}
-                className="relative flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+                className="relative flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-200 border"
                 style={{
-                  backgroundColor: isActive ? '#C4592A' : '#FAF6EC',
-                  color: isActive ? '#fff' : '#1A1208',
-                  border: `1.5px solid ${isActive ? '#C4592A' : '#E2D5BE'}`,
-                  boxShadow: isActive ? '0 3px 10px rgba(196,89,42,0.25)' : '0 1px 3px rgba(26,18,8,0.04)',
+                  backgroundColor: active ? '#FF5500' : '#fff',
+                  color:           active ? '#fff'    : '#09090B',
+                  borderColor:     active ? '#FF5500' : '#E4E4E7',
+                  boxShadow:       active ? '0 2px 8px rgba(255,85,0,0.3)' : 'none',
                 }}
               >
                 {n}
@@ -262,8 +213,8 @@ export default function RecipeDetail({ userProfile }) {
                   <span
                     className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
                     style={{
-                      backgroundColor: isActive ? '#fff' : '#C4592A',
-                      color: isActive ? '#C4592A' : '#fff',
+                      backgroundColor: active ? '#fff' : '#FF5500',
+                      color:           active ? '#FF5500' : '#fff',
                     }}
                   >
                     for you
@@ -275,7 +226,7 @@ export default function RecipeDetail({ userProfile }) {
         </div>
 
         {tdee && scaled.calories && (
-          <p className="text-xs text-muted text-center mt-2.5">
+          <p className="text-xs text-ink-4 text-center mt-2.5">
             {scaled.calories} kcal · {Math.round((scaled.calories / tdee) * 100)}% of daily intake
           </p>
         )}
@@ -284,24 +235,15 @@ export default function RecipeDetail({ userProfile }) {
       {/* Nutrition */}
       {nutrientRows.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted mb-3">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-4 mb-3">
             Nutrition · {portions} {portions === 1 ? 'portion' : 'portions'}
-          </h2>
+          </p>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {nutrientRows.map(([label, val, unit]) => (
-              <div
-                key={label}
-                className="rounded-xl p-3 text-center"
-                style={{
-                  backgroundColor: '#FAF6EC',
-                  border: '1px solid #E2D5BE',
-                }}
-              >
-                <div className="font-display text-xl font-semibold text-ink" style={{ lineHeight: 1 }}>
-                  {val}
-                </div>
-                <div className="text-[10px] text-muted mt-1">{label}</div>
-                <div className="text-[9px] text-ink-light">{unit}</div>
+              <div key={label} className="bg-surface rounded-lg p-3 text-center border border-border">
+                <div className="font-display text-xl font-bold text-ink leading-tight">{val}</div>
+                <div className="text-[10px] text-ink-4 mt-1">{label}</div>
+                <div className="text-[9px] text-ink-4">{unit}</div>
               </div>
             ))}
           </div>
@@ -311,27 +253,20 @@ export default function RecipeDetail({ userProfile }) {
       {/* Ingredients */}
       {recipe.ingredients?.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted mb-4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-4 mb-3">
             Ingredients · {portions} {portions === 1 ? 'portion' : 'portions'}
-          </h2>
-          <ul className="flex flex-col divide-y" style={{ borderColor: '#EDE4D0' }}>
+          </p>
+          <ul className="divide-y divide-border">
             {recipe.ingredients.map(ing => {
               const scaledQty = ing.quantity != null ? ing.quantity * scale : null;
               return (
                 <li key={ing.id} className="flex items-baseline gap-3 py-2.5 text-sm">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]"
-                    style={{ backgroundColor: '#C4592A', opacity: 0.6 }}
-                  />
-                  <span className="text-ink">
-                    {scaledQty != null && (
-                      <span className="font-semibold text-terra">{formatQty(scaledQty)} </span>
-                    )}
-                    {ing.unit && <span className="text-muted">{ing.unit} </span>}
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-[7px] opacity-70" />
+                  <span className="text-ink-2">
+                    {scaledQty != null && <span className="font-semibold text-accent">{formatQty(scaledQty)} </span>}
+                    {ing.unit && <span className="text-ink-4">{ing.unit} </span>}
                     {ing.name}
-                    {ing.notes && (
-                      <span className="text-ink-light text-xs"> · {ing.notes}</span>
-                    )}
+                    {ing.notes && <span className="text-ink-4 text-xs"> · {ing.notes}</span>}
                   </span>
                 </li>
               );
@@ -343,31 +278,25 @@ export default function RecipeDetail({ userProfile }) {
       {/* Steps */}
       {recipe.steps?.length > 0 && (
         <section className="mb-12">
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted mb-5">
-            Instructions
-          </h2>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-4 mb-5">Instructions</p>
           <ol className="flex flex-col gap-4">
             {recipe.steps.map((step, i) => {
               const done = checkedSteps.has(i);
               return (
-                <li
-                  key={i}
-                  className="flex gap-4 cursor-pointer group"
-                  onClick={() => toggleStep(i)}
-                >
+                <li key={i} className="flex gap-4 cursor-pointer group" onClick={() => toggleStep(i)}>
                   <span
                     className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 mt-0.5"
                     style={{
-                      backgroundColor: done ? '#D4E7DB' : '#F5D9C8',
-                      color: done ? '#2A5439' : '#C4592A',
+                      backgroundColor: done ? '#F0FDF4' : '#FFF3EE',
+                      color:           done ? '#16A34A' : '#FF5500',
                     }}
                   >
                     {done ? '✓' : i + 1}
                   </span>
                   <p
-                    className="text-sm leading-relaxed transition-colors duration-200"
+                    className="text-sm leading-relaxed pt-0.5 transition-colors duration-200"
                     style={{
-                      color: done ? '#B5A898' : '#1A1208',
+                      color:          done ? '#A1A1AA' : '#3F3F46',
                       textDecoration: done ? 'line-through' : 'none',
                     }}
                   >
