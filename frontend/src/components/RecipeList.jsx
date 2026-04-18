@@ -4,20 +4,22 @@ import ExtractForm from './ExtractForm';
 import RecipeCard from './RecipeCard';
 import { SMART_TAGS, getSmartTags } from '../utils/smartTags';
 
-const TAG_ACTIVE = {
-  green:   'bg-green-500 text-white',
-  blue:    'bg-sky-500 text-white',
-  purple:  'bg-violet-500 text-white',
-  emerald: 'bg-emerald-500 text-white',
-  amber:   'bg-amber-500 text-white',
+const FILTER_STYLES = {
+  green:   { active: { bg: '#4A7A5C', text: '#fff' }, idle: { bg: '#D4E7DB', text: '#2A5439' } },
+  blue:    { active: { bg: '#3A5A8C', text: '#fff' }, idle: { bg: '#D4E0EE', text: '#2A3F6B' } },
+  purple:  { active: { bg: '#6A3A9C', text: '#fff' }, idle: { bg: '#E4D8F0', text: '#4A2A6B' } },
+  emerald: { active: { bg: '#2E6B4A', text: '#fff' }, idle: { bg: '#D2EADE', text: '#1E5438' } },
+  amber:   { active: { bg: '#8B5A10', text: '#fff' }, idle: { bg: '#EEE0C2', text: '#6B4A10' } },
 };
-const TAG_IDLE = {
-  green:   'bg-green-100 text-green-700 hover:bg-green-200',
-  blue:    'bg-sky-100 text-sky-700 hover:bg-sky-200',
-  purple:  'bg-violet-100 text-violet-700 hover:bg-violet-200',
-  emerald: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
-  amber:   'bg-amber-100 text-amber-700 hover:bg-amber-200',
-};
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
+      <circle cx="7.5" cy="7.5" r="5.5" />
+      <path d="M13 13l3 3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState([]);
@@ -28,8 +30,7 @@ export default function RecipeList() {
   const fetchRecipes = useCallback(async () => {
     setLoading(true);
     try {
-      const params = query ? { q: query } : {};
-      const data = await getRecipes(params);
+      const data = await getRecipes(query ? { q: query } : {});
       setRecipes(data);
     } finally {
       setLoading(false);
@@ -45,45 +46,97 @@ export default function RecipeList() {
   const availableFilters = SMART_TAGS.filter(t => recipes.some(r => t.fn(r)));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <ExtractForm onExtracted={fetchRecipes} />
 
+      {/* Search + Filters */}
       <div className="flex flex-col gap-3">
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search…"
-          className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 shadow-sm placeholder:text-gray-400"
-        />
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-light pointer-events-none">
+            <SearchIcon />
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search recipes…"
+            className="w-full bg-surface rounded-xl pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-ink-light focus:outline-none transition-all duration-200"
+            style={{ border: '1px solid #E2D5BE' }}
+            onFocus={e => {
+              e.target.style.borderColor = '#C4592A';
+              e.target.style.boxShadow = '0 0 0 3px rgba(196,89,42,0.1)';
+            }}
+            onBlur={e => {
+              e.target.style.borderColor = '#E2D5BE';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-light hover:text-muted text-lg leading-none"
+            >
+              ×
+            </button>
+          )}
+        </div>
 
         {availableFilters.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {availableFilters.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActiveFilter(activeFilter === t.key ? '' : t.key)}
-                className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
-                  activeFilter === t.key ? TAG_ACTIVE[t.color] : TAG_IDLE[t.color]
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+            {availableFilters.map(t => {
+              const isActive = activeFilter === t.key;
+              const s = FILTER_STYLES[t.color] || FILTER_STYLES.amber;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveFilter(isActive ? '' : t.key)}
+                  className="text-[11px] px-3 py-1 rounded-full font-medium transition-all duration-200"
+                  style={{
+                    backgroundColor: isActive ? s.active.bg : s.idle.bg,
+                    color: isActive ? s.active.text : s.idle.text,
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
+      {/* Recipe grid */}
       {loading ? (
-        <div className="text-center py-16 text-gray-300 text-sm">Loading…</div>
+        <div className="flex items-center justify-center py-20 gap-2 text-ink-light text-sm">
+          <svg className="animate-spin w-4 h-4 text-terra" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+            <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          Loading…
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">
-          {query || activeFilter ? 'No recipes match.' : 'Paste a link above to add your first recipe.'}
+        <div className="text-center py-20">
+          <p className="font-display text-3xl text-ink-light italic mb-2">
+            {query || activeFilter ? 'No matches' : 'Nothing here yet'}
+          </p>
+          <p className="text-sm text-muted">
+            {query || activeFilter
+              ? 'Try a different search or filter.'
+              : 'Paste a TikTok or Instagram link above to import your first recipe.'}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map(r => <RecipeCard key={r.id} recipe={r} />)}
-        </div>
+        <>
+          {(query || activeFilter) && (
+            <p className="text-xs text-muted -mb-5">
+              {filtered.length} {filtered.length === 1 ? 'recipe' : 'recipes'}
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filtered.map((r, i) => (
+              <RecipeCard key={r.id} recipe={r} index={i} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
