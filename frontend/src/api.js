@@ -32,6 +32,9 @@ export const getTags = () =>
 export const getShoppingList = () =>
   api.get('/shopping').then(r => r.data);
 
+export const addShoppingItem = (ingredient_name, quantity, unit) =>
+  api.post('/shopping', { ingredient_name, quantity, unit }).then(r => r.data);
+
 export const addRecipeToShopping = recipe_id =>
   api.post('/shopping/add-recipe', { recipe_id }).then(r => r.data);
 

@@ -65,6 +65,21 @@ router.post('/add-recipe', (req, res) => {
   res.json(items);
 });
 
+router.post('/', (req, res) => {
+  const { ingredient_name, quantity, unit } = req.body;
+  if (!ingredient_name || !ingredient_name.trim()) {
+    return res.status(400).json({ error: 'ingredient_name required' });
+  }
+  const name = ingredient_name.trim().toLowerCase();
+  const existing = db.prepare('SELECT * FROM shopping_list_items WHERE LOWER(TRIM(ingredient_name)) = ?').get(name);
+  if (existing) return res.json(existing);
+  db.prepare('INSERT INTO shopping_list_items (ingredient_name, quantity, unit, source_recipe_ids) VALUES (?, ?, ?, ?)').run(
+    name, quantity || null, unit || null, '[]'
+  );
+  const item = db.prepare('SELECT * FROM shopping_list_items WHERE ingredient_name = ?').get(name);
+  res.status(201).json(item);
+});
+
 router.patch('/:id', (req, res) => {
   const { checked, quantity, unit, ingredient_name } = req.body;
   const item = db.prepare('SELECT * FROM shopping_list_items WHERE id = ?').get(req.params.id);

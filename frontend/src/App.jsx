@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, NavLink, Outlet } from 'react-router-dom';
 import RecipeList from './components/RecipeList';
 import RecipeDetail from './components/RecipeDetail';
 import ShoppingList from './components/ShoppingList';
@@ -26,15 +26,14 @@ function BagIcon() {
 }
 
 function AppLayout() {
-  const [shoppingOpen, setShoppingOpen] = useState(false);
-  const [profileOpen,  setProfileOpen]  = useState(false);
-  const { profile, save: saveProfile }  = useUserProfile();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { profile, save: saveProfile } = useUserProfile();
 
   return (
     <div className="min-h-screen bg-bg">
       <header className="bg-bg border-b border-border sticky top-0 z-30" style={{ backdropFilter: 'blur(12px)' }}>
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <Link to="/" className="font-display text-[20px] font-bold tracking-tight text-ink leading-none" style={{ textDecoration: 'none' }}>
+          <Link to="/app" className="font-display text-[20px] font-bold tracking-tight text-ink leading-none" style={{ textDecoration: 'none' }}>
             2<span className="text-accent">d</span>ish
           </Link>
           <div className="flex items-center gap-0.5">
@@ -49,16 +48,16 @@ function AppLayout() {
               <PersonIcon />
               {profile && <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-accent" />}
             </button>
-            <button
-              onClick={() => setShoppingOpen(true)}
+            <NavLink
+              to="/shopping"
               title="Shopping List"
               className="p-2 rounded-lg transition-colors duration-150"
-              style={{ color: 'rgba(240,244,248,0.35)' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#F0F4F8'; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(240,244,248,0.35)'; }}
+              style={({ isActive }) => ({ color: isActive ? '#FF5500' : 'rgba(240,244,248,0.35)' })}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
               <BagIcon />
-            </button>
+            </NavLink>
           </div>
         </div>
       </header>
@@ -69,8 +68,7 @@ function AppLayout() {
         <Outlet context={{ userProfile: profile }} />
       </main>
 
-      {shoppingOpen && <ShoppingList onClose={() => setShoppingOpen(false)} />}
-      {profileOpen  && <UserProfileModal onClose={() => setProfileOpen(false)} onSave={saveProfile} />}
+      {profileOpen && <UserProfileModal onClose={() => setProfileOpen(false)} onSave={saveProfile} />}
     </div>
   );
 }
@@ -82,6 +80,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route element={<AppLayout />}>
           <Route path="/app"         element={<RecipeList />} />
+          <Route path="/shopping"    element={<ShoppingList />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
         </Route>
       </Routes>
