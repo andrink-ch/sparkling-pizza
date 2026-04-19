@@ -2,8 +2,8 @@ import axios from 'axios';
 
 const api = axios.create({ baseURL: '/api' });
 
-export const extractRecipe = url =>
-  api.post('/recipes/extract', { url }).then(r => r.data);
+export const extractRecipe     = url              => api.post('/recipes/extract',      { url }).then(r => r.data);
+export const extractRecipeText = (text, url = '') => api.post('/recipes/extract-text', { text, url }).then(r => r.data);
 
 export const getRecipes = params =>
   api.get('/recipes', { params }).then(r => r.data);

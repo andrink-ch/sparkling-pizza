@@ -55,47 +55,76 @@ All nutrition values are per serving.
 If this content does not appear to contain a recipe (no ingredients, no instructions), return:
 {"error": "No recipe found in this video content"}`;
 
-function extractCaptions(meta) {
-  const sources = [meta.automatic_captions, meta.subtitles];
-  for (const src of sources) {
-    if (!src) continue;
-    const lang = src['en'] || src['en-US'] || Object.values(src)[0];
-    if (!lang || !Array.isArray(lang)) continue;
-    const json3 = lang.find(e => e.ext === 'json3' && e.data);
-    if (json3) {
-      return (json3.data.events || [])
-        .filter(e => e.segs)
-        .map(e => e.segs.map(s => s.utf8).join(''))
-        .join(' ');
-    }
+function decodeHTML(str) {
+  return str
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'");
+}
+
+function getMetaContent(html, prop, attr = 'property') {
+  const r1 = new RegExp(`<meta\\s+${attr}=["']${prop}["']\\s+content=["']([^"']*?)["']`, 'i');
+  const r2 = new RegExp(`<meta\\s+content=["']([^"']*?)["']\\s+${attr}=["']${prop}["']`, 'i');
+  const m = html.match(r1) || html.match(r2);
+  return m ? decodeHTML(m[1]) : '';
+}
+
+async function fetchPageMetadata(url) {
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+
+  const title = getMetaContent(html, 'og:title') || getMetaContent(html, 'twitter:title') || '';
+  const metaDesc = getMetaContent(html, 'og:description') || getMetaContent(html, 'description', 'name') || '';
+
+  // Try TikTok's embedded JSON for the full description
+  let richDesc = '';
+  const scriptMatch = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
+  if (scriptMatch) {
+    try {
+      const str = scriptMatch[1];
+      const hits = [...str.matchAll(/"desc":"((?:[^"\\]|\\.){30,})"/g)];
+      if (hits.length) richDesc = hits[0][1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    } catch {}
   }
-  return '';
+
+  const description = richDesc || metaDesc;
+  if (!title && !description) throw new Error('No readable content found at this URL');
+  return { title, description, captions: '', uploader: '' };
 }
 
 async function extractVideoMetadata(url) {
-  const cmd = `python -m yt_dlp --skip-download --print-json --no-playlist --quiet "${url}"`;
+  // Strategy 1: direct HTTP fetch (works for TikTok/Instagram meta tags)
   try {
-    const { stdout } = await execAsync(cmd, {
-      timeout: 30000,
-      maxBuffer: 10 * 1024 * 1024,
-    });
-    const meta = JSON.parse(stdout);
-    return {
-      title: meta.title || '',
-      description: meta.description || '',
-      captions: extractCaptions(meta),
-      uploader: meta.uploader || '',
-    };
-  } catch (err) {
-    if (err.code === 'ETIMEDOUT') throw new Error('Video extraction timed out');
-    if (err.message.includes('not found') || err.message.includes('No such file')) {
-      throw new Error('yt-dlp is not installed. Run: python -m pip install yt-dlp');
+    return await fetchPageMetadata(url);
+  } catch {
+    // Strategy 2: yt-dlp fallback
+    try {
+      const cmd = `python -m yt_dlp --skip-download --print-json --no-playlist --quiet "${url}"`;
+      const { stdout } = await execAsync(cmd, { timeout: 30000, maxBuffer: 10 * 1024 * 1024 });
+      const meta = JSON.parse(stdout);
+      const captions = (() => {
+        for (const src of [meta.automatic_captions, meta.subtitles]) {
+          if (!src) continue;
+          const lang = src['en'] || src['en-US'] || Object.values(src)[0];
+          if (!lang || !Array.isArray(lang)) continue;
+          const j = lang.find(e => e.ext === 'json3' && e.data);
+          if (j) return (j.data.events || []).filter(e => e.segs).map(e => e.segs.map(s => s.utf8).join('')).join(' ');
+        }
+        return '';
+      })();
+      return { title: meta.title || '', description: meta.description || '', captions, uploader: meta.uploader || '' };
+    } catch {
+      throw new Error('Could not extract this URL. Try the "Paste text" tab — copy the description from TikTok and paste it there.');
     }
-    const msg = err.stderr || err.message || '';
-    if (msg.includes('Private') || msg.includes('private')) {
-      throw new Error('This video is private or unavailable');
-    }
-    throw new Error(`Could not extract video: ${msg.slice(0, 200)}`);
   }
 }
 
@@ -147,12 +176,54 @@ function getFullRecipe(id) {
   return recipe;
 }
 
-// POST /api/recipes/extract
+function saveRecipe(recipeData, sourceUrl, rawMeta) {
+  const insertRecipe = db.transaction(data => {
+    const result = db.prepare(`
+      INSERT INTO recipes
+        (source_url, title, description, servings, prep_time_min, cook_time_min,
+         steps, calories, protein_g, fiber_g, sugar_g, fat_g, carbs_g, raw_caption)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      sourceUrl || '',
+      data.title,
+      data.description || '',
+      data.servings || null,
+      data.prep_time_min || null,
+      data.cook_time_min || null,
+      JSON.stringify(data.steps || []),
+      data.nutrition?.calories || null,
+      data.nutrition?.protein_g || null,
+      data.nutrition?.fiber_g || null,
+      data.nutrition?.sugar_g || null,
+      data.nutrition?.fat_g || null,
+      data.nutrition?.carbs_g || null,
+      rawMeta ? JSON.stringify(rawMeta) : null
+    );
+    const recipeId = result.lastInsertRowid;
+
+    const insertIng = db.prepare('INSERT INTO ingredients (recipe_id, name, quantity, unit, notes) VALUES (?, ?, ?, ?, ?)');
+    for (const ing of data.ingredients || []) {
+      insertIng.run(recipeId, ing.name, ing.quantity || null, ing.unit || null, ing.notes || null);
+    }
+
+    const upsertTag = db.prepare('INSERT INTO tags (name) VALUES (?) ON CONFLICT(name) DO NOTHING');
+    const getTag    = db.prepare('SELECT id FROM tags WHERE name = ?');
+    const linkTag   = db.prepare('INSERT OR IGNORE INTO recipe_tags (recipe_id, tag_id) VALUES (?, ?)');
+    for (const tagName of data.tags || []) {
+      const name = tagName.toLowerCase().trim();
+      upsertTag.run(name);
+      const tag = getTag.get(name);
+      if (tag) linkTag.run(recipeId, tag.id);
+    }
+    return recipeId;
+  });
+  return insertRecipe(recipeData);
+}
+
+// POST /api/recipes/extract  (URL-based)
 router.post('/extract', async (req, res) => {
   const { url } = req.body;
-  if (!url || typeof url !== 'string') {
-    return res.status(400).json({ error: 'url is required' });
-  }
+  if (!url || typeof url !== 'string') return res.status(400).json({ error: 'url is required' });
 
   let videoMeta;
   try {
@@ -168,61 +239,35 @@ router.post('/extract', async (req, res) => {
     return res.status(500).json({ error: `Claude API error: ${err.message}` });
   }
 
-  if (recipeData.error) {
-    return res.status(422).json({ error: recipeData.error });
-  }
-
-  const insertRecipe = db.transaction(data => {
-    const result = db.prepare(`
-      INSERT INTO recipes
-        (source_url, title, description, servings, prep_time_min, cook_time_min,
-         steps, calories, protein_g, fiber_g, sugar_g, fat_g, carbs_g, raw_caption)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      url,
-      data.title,
-      data.description || '',
-      data.servings || null,
-      data.prep_time_min || null,
-      data.cook_time_min || null,
-      JSON.stringify(data.steps || []),
-      data.nutrition?.calories || null,
-      data.nutrition?.protein_g || null,
-      data.nutrition?.fiber_g || null,
-      data.nutrition?.sugar_g || null,
-      data.nutrition?.fat_g || null,
-      data.nutrition?.carbs_g || null,
-      JSON.stringify(videoMeta)
-    );
-    const recipeId = result.lastInsertRowid;
-
-    const insertIng = db.prepare(
-      'INSERT INTO ingredients (recipe_id, name, quantity, unit, notes) VALUES (?, ?, ?, ?, ?)'
-    );
-    for (const ing of data.ingredients || []) {
-      insertIng.run(recipeId, ing.name, ing.quantity || null, ing.unit || null, ing.notes || null);
-    }
-
-    const upsertTag = db.prepare(
-      'INSERT INTO tags (name) VALUES (?) ON CONFLICT(name) DO NOTHING'
-    );
-    const getTag = db.prepare('SELECT id FROM tags WHERE name = ?');
-    const linkTag = db.prepare(
-      'INSERT OR IGNORE INTO recipe_tags (recipe_id, tag_id) VALUES (?, ?)'
-    );
-    for (const tagName of data.tags || []) {
-      const name = tagName.toLowerCase().trim();
-      upsertTag.run(name);
-      const tag = getTag.get(name);
-      if (tag) linkTag.run(recipeId, tag.id);
-    }
-
-    return recipeId;
-  });
+  if (recipeData.error) return res.status(422).json({ error: recipeData.error });
 
   try {
-    const recipeId = insertRecipe(recipeData);
-    res.status(201).json(getFullRecipe(recipeId));
+    res.status(201).json(getFullRecipe(saveRecipe(recipeData, url, videoMeta)));
+  } catch (err) {
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+// POST /api/recipes/extract-text  (paste raw text)
+router.post('/extract-text', async (req, res) => {
+  const { text, url } = req.body;
+  if (!text || typeof text !== 'string' || text.trim().length < 10) {
+    return res.status(400).json({ error: 'text is required (min 10 chars)' });
+  }
+
+  const videoMeta = { title: '', description: text.trim(), captions: '', uploader: '' };
+
+  let recipeData;
+  try {
+    recipeData = await extractRecipeWithClaude(videoMeta, url || '');
+  } catch (err) {
+    return res.status(500).json({ error: `Claude API error: ${err.message}` });
+  }
+
+  if (recipeData.error) return res.status(422).json({ error: recipeData.error });
+
+  try {
+    res.status(201).json(getFullRecipe(saveRecipe(recipeData, url || '', null)));
   } catch (err) {
     res.status(500).json({ error: `Database error: ${err.message}` });
   }
