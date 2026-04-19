@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
 import RecipeList from './components/RecipeList';
 import RecipeDetail from './components/RecipeDetail';
 import ShoppingList from './components/ShoppingList';
@@ -32,17 +32,11 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-bg">
-      {/* Header — same dark as landing */}
       <header className="bg-bg border-b border-border sticky top-0 z-30" style={{ backdropFilter: 'blur(12px)' }}>
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <Link
-            to="/"
-            className="font-display text-[20px] font-bold tracking-tight text-ink leading-none"
-            style={{ textDecoration: 'none' }}
-          >
+          <Link to="/" className="font-display text-[20px] font-bold tracking-tight text-ink leading-none" style={{ textDecoration: 'none' }}>
             2<span className="text-accent">d</span>ish
           </Link>
-
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => setProfileOpen(true)}
@@ -55,7 +49,6 @@ function AppLayout() {
               <PersonIcon />
               {profile && <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-accent" />}
             </button>
-
             <button
               onClick={() => setShoppingOpen(true)}
               title="Shopping List"
@@ -70,21 +63,10 @@ function AppLayout() {
         </div>
       </header>
 
-      {/* Subtle grid bg — same as landing */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-          zIndex: 0,
-        }}
-      />
+      <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '48px 48px', zIndex: 0 }} />
 
       <main className="max-w-5xl mx-auto px-5 py-8 relative z-10">
-        <Routes>
-          <Route path="/app"         element={<RecipeList />} />
-          <Route path="/recipes/:id" element={<RecipeDetail userProfile={profile} />} />
-        </Routes>
+        <Outlet context={{ userProfile: profile }} />
       </main>
 
       {shoppingOpen && <ShoppingList onClose={() => setShoppingOpen(false)} />}
@@ -97,9 +79,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"            element={<LandingPage />} />
-        <Route path="/app"         element={<AppLayout />} />
-        <Route path="/recipes/:id" element={<AppLayout />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/app"         element={<RecipeList />} />
+          <Route path="/recipes/:id" element={<RecipeDetail />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

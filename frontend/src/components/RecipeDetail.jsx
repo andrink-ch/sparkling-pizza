@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { getRecipe, deleteRecipe, addRecipeToShopping } from '../api';
 import RecipeEditModal from './RecipeEditModal';
 import { calcTDEE, recommendedPortions, formatQty } from '../utils/nutrition';
@@ -25,7 +25,8 @@ function Spinner() {
   );
 }
 
-export default function RecipeDetail({ userProfile }) {
+export default function RecipeDetail() {
+  const { userProfile } = useOutletContext() || {};
   const { id } = useParams();
   const navigate = useNavigate();
   const [recipe,        setRecipe]        = useState(null);

@@ -46,28 +46,14 @@ export default function RecipeList() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* Import hero card */}
-      <div
-        className="rounded-xl p-6 border border-border relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #111113 0%, #16181E 100%)' }}
-      >
-        {/* Glow */}
-        <div
-          className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,85,0,0.4), transparent)' }}
-        />
-        <div
-          className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(255,85,0,0.06) 0%, transparent 70%)' }}
-        />
+      {/* Import section */}
+      <div className="rounded-2xl border border-border overflow-hidden" style={{ background: 'linear-gradient(135deg, #111113 0%, #16181E 100%)' }}>
+        {/* Orange top line */}
+        <div className="h-[3px]" style={{ background: 'linear-gradient(90deg, transparent, #FF5500 30%, #FF5500 70%, transparent)' }} />
 
-        <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-accent mb-1">
-            Import a recipe
-          </p>
-          <p className="text-sm text-ink-2 mb-4">
-            Paste any TikTok or Instagram link — AI extracts the full recipe instantly.
-          </p>
+        <div className="px-6 pt-5 pb-6">
+          <p className="font-display font-bold text-ink text-lg mb-0.5">Import a recipe</p>
+          <p className="text-sm text-ink-3 mb-5">Paste a TikTok or Instagram link — AI extracts the full recipe.</p>
           <ExtractForm onExtracted={fetchRecipes} />
         </div>
       </div>
